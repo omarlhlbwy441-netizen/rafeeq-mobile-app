@@ -1,67 +1,92 @@
-# 🐺 رفيق — Rafeeq Mobile App
+# رفيق (Rafeeq) — v3.0.0
 
-**Rafeeq Kernel v2.3.0** — Your Intelligent AI Companion
+> **Your Intelligent AI Companion** — The most powerful digital ecosystem with the strongest kernel.
 
-تطبيق جوال هجين (Hybrid Mobile) يجمع كل ميزات نظام رفيق الذاتي التطور في واجهة واحدة.
+## 🚀 What's New in v3.0.0
 
-## 📱 الميزات
+- **PostgreSQL + Asyncpg** — Full async database layer
+- **JWT Authentication** — Access & refresh tokens with session tracking
+- **Redis Caching** — High-performance caching layer
+- **Alembic Migrations** — Database schema versioning
+- **Store/Franchise System** — Multi-tenant merchant platform
+- **Admin Dashboard API** — System analytics & user management
+- **Docker + Render** — Production-ready deployment
+- **Comprehensive Tests** — Pytest async test suite
 
-| الميزة | الوصف |
-|--------|-------|
-| 🤖 10+ وكيل ذكي | وكلاء متخصصون في التطوير والتصميم والأمان |
-| 🧬 محرك تطور ذاتي | توليد وتحسين الأكواد تلقائياً |
-| 🐙 GitHub Manager | إدارة المستودعات والمزامنة التلقائية |
-| 🎮 Game Architect | بناء وتوليد الألعاب |
-| 🎬 Video Architect | توليد وتحرير الفيديوهات |
-| 🌐 Web Architect | بناء ونشر المواقع |
-| 🗄️ Database | إدارة PostgreSQL + Redis |
-| 📊 Monitoring | Grafana + Prometheus مدمج |
-| 🐳 DevOps | Docker + Kubernetes + Helm |
-| 🧪 Tests | pytest كامل |
-| 💻 Terminal | طرفية تفاعلية |
-| 🔒 Auth | JWT + Biometric |
-
-## 🚀 التشغيل
-
-```bash
-# Frontend (Expo)
-cd rafeeq-mobile-app
-npm install
-npx expo start
-
-# Backend (FastAPI)
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-## 📦 البنية
+## 🏗️ Architecture
 
 ```
 rafeeq-mobile-app/
-├── App.tsx                    # نقطة الدخول
-├── src/
-│   ├── screens/               # 20+ شاشة
-│   ├── components/            # مكونات مشتركة
-│   ├── services/              # API Client
-│   ├── context/               # حالة التطبيق
-│   └── utils/                 # ثوابت ومساعدات
 ├── backend/
-│   ├── main.py                # FastAPI
-│   ├── requirements.txt
-│   └── Dockerfile
-└── assets/
+│   ├── app/
+│   │   ├── main.py          # FastAPI application
+│   │   ├── config.py        # Pydantic settings
+│   │   ├── database.py      # SQLAlchemy async engine
+│   │   ├── models.py        # ORM models
+│   │   ├── schemas.py       # Pydantic schemas
+│   │   ├── auth.py          # JWT & password utils
+│   │   └── routers/
+│   │       ├── auth.py      # Login/Register/Logout
+│   │       ├── users.py     # User management
+│   │       ├── stores.py    # Franchise stores
+│   │       ├── products.py  # Product catalog
+│   │       ├── admin.py     # Admin panel
+│   │       └── health.py    # Health checks
+│   ├── alembic/             # Database migrations
+│   ├── tests/               # Test suite
+│   ├── Dockerfile
+│   └── requirements.txt
+├── docker-compose.yml
+├── render.yaml
+└── README.md
 ```
 
-## 🔑 المفاتيح
+## 🛠️ Quick Start
 
-- GitHub: `omarlhlbwy441-netizen/dtr-hjin`
-- Backend: FastAPI + PostgreSQL + Redis
-- Frontend: Expo + React Native + TypeScript
+### Docker (Recommended)
+```bash
+docker-compose up --build
+```
 
-## 🇪🇬 شكر خاص
+### Local Development
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-"من بعد فضل الله أشكر دولة مصر لأنها أتاحت لي فرصة لكي أقوم بهذا العمل"
+# Set up PostgreSQL & Redis, then:
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+### Environment Variables
+```env
+DATABASE_URL=postgresql://user:pass@localhost:5432/rafeeq
+REDIS_URL=redis://localhost:6379/0
+SECRET_KEY=your-super-secret-key
+ENVIRONMENT=development
+```
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/register` | Create new account |
+| POST | `/api/v1/auth/login` | Authenticate |
+| POST | `/api/v1/auth/logout` | End session |
+| GET | `/api/v1/auth/me` | Current user |
+| GET | `/api/v1/users/me` | Profile |
+| PATCH | `/api/v1/users/me` | Update profile |
+| POST | `/api/v1/stores/` | Create store |
+| GET | `/api/v1/stores/` | List stores |
+| GET | `/api/v1/stores/my` | My stores |
+| POST | `/api/v1/products/` | Create product |
+| GET | `/api/v1/products/store/{id}` | Store products |
+| GET | `/api/v1/admin/dashboard` | Admin stats |
+| GET | `/health` | Health check |
+
+## 🐺 Powered by Wolf Digital Kingdom
 
 ---
-Built with ❤️ in Egypt 🇪🇬
+**License:** MIT | **Version:** 3.0.0 | **2026**

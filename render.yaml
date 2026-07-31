@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: rafeeq-api
+    runtime: docker
+    plan: standard
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rafeeq-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: rafeeq-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+    healthCheckPath: /health
+
+databases:
+  - name: rafeeq-db
+    plan: standard
+    ipAllowList: []
+
+redis:
+  - name: rafeeq-redis
+    plan: standard
+    ipAllowList: []

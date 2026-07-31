@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://rafeeq:rafeeq123@db:5432/rafeeq
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=rafeeq-super-secret-key-2026
+      - ENVIRONMENT=production
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rafeeq
+      POSTGRES_PASSWORD: rafeeq123
+      POSTGRES_DB: rafeeq
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
