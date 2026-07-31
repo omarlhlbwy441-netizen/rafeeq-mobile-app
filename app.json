@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "رفيق — Rafeeq",
+    "slug": "rafeeq-mobile",
+    "version": "2.3.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0f"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wolfdigital.rafeeq",
+      "buildNumber": "2.3.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "يحتاج رفيق إلى الكاميرا لمسح QR والتعرف على الصور",
+        "NSMicrophoneUsageDescription": "يحتاج رفيق إلى الميكروفون للأوامر الصوتية",
+        "NSLocationWhenInUseUsageDescription": "يحتاج رفيق إلى الموقع للخدمات المخصصة"
+      }
+    },
+    "android": {
+      "package": "com.wolfdigital.rafeeq",
+      "versionCode": 230,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0f"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "FOREGROUND_SERVICE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-notifications",
+      "expo-sqlite",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "rafeeq-mobile-prod"
+      }
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/rafeeq-mobile-prod"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "owner": "wolfdigital"
+  }
+}
