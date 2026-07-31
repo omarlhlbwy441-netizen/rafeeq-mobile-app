@@ -1,64 +1,121 @@
-import axios from 'axios';
-import { Agent, EvolutionTask, GitHubRepo, HealthStatus, DatabaseTable, GameProject, VideoProject, WebProject } from '@types';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || "https://rafeeq-api.onrender.com";
 
-const api = axios.create({
-  baseURL: API_BASE,
-  timeout: 30000,
-  headers: { 'Content-Type': 'application/json' }
-});
+class ApiClient {
+  private baseUrl: string;
 
-api.interceptors.request.use(async (config) => {
-  // Add auth token if available
-  return config;
-});
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
 
-export const ApiService = {
-  // Health
-  getHealth: () => api.get<HealthStatus>('/health'),
-  getDbHealth: () => api.get('/health/db'),
-  getRedisHealth: () => api.get('/health/redis'),
-  getMetrics: () => api.get('/health/metrics'),
+  private async getToken(): Promise<string | null> {
+    return await AsyncStorage.getItem("access_token");
+  }
+
+  private async request(endpoint: string, options: RequestInit = {}): Promise<any> {
+    const token = await this.getToken();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...((options.headers as Record<string, string>) || {}),
+    };
+
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.detail || `HTTP ${response.status}`);
+    }
+
+    return data;
+  }
 
   // Auth
-  login: (email: string, password: string) => api.post('/auth/login', { email, password }),
-  register: (data: any) => api.post('/auth/register', data),
+  async register(email: string, username: string, password: string, fullName?: string) {
+    return this.request("/api/v1/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, username, password, full_name: fullName }),
+    });
+  }
 
-  // Agents
-  getAgents: () => api.get<Agent[]>('/agents'),
-  chatWithAgent: (id: string, message: string) => api.post(`/agents/${id}/chat`, { message }),
+  async login(username: string, password: string) {
+    const data = await this.request("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+    await AsyncStorage.setItem("access_token", data.access_token);
+    await AsyncStorage.setItem("refresh_token", data.refresh_token);
+    return data;
+  }
 
-  // Evolution
-  triggerEvolution: () => api.post('/evolution/trigger'),
-  getEvolutionTasks: () => api.get<EvolutionTask[]>('/evolution/tasks'),
+  async logout() {
+    await this.request("/api/v1/auth/logout", { method: "POST" });
+    await AsyncStorage.multiRemove(["access_token", "refresh_token"]);
+  }
 
-  // GitHub
-  getGitHubStatus: () => api.get('/github/status'),
-  getRepos: () => api.get<GitHubRepo[]>('/github/repos'),
-  syncRepo: (name: string) => api.post(`/github/sync/${name}`),
+  async getMe() {
+    return this.request("/api/v1/auth/me");
+  }
 
-  // Games
-  getGames: () => api.get<GameProject[]>('/games'),
-  createGame: (data: any) => api.post('/games', data),
+  // Users
+  async updateProfile(fullName?: string, avatarUrl?: string) {
+    return this.request("/api/v1/users/me", {
+      method: "PATCH",
+      body: JSON.stringify({ full_name: fullName, avatar_url: avatarUrl }),
+    });
+  }
 
-  // Videos
-  getVideos: () => api.get<VideoProject[]>('/videos'),
-  createVideo: (data: any) => api.post('/videos', data),
+  // Stores
+  async createStore(name: string, slug: string, description?: string) {
+    return this.request("/api/v1/stores/", {
+      method: "POST",
+      body: JSON.stringify({ name, slug, description }),
+    });
+  }
 
-  // Websites
-  getWebsites: () => api.get<WebProject[]>('/websites'),
-  createWebsite: (data: any) => api.post('/websites', data),
+  async listStores(skip = 0, limit = 20) {
+    return this.request(`/api/v1/stores/?skip=${skip}&limit=${limit}`);
+  }
 
-  // Database
-  getTables: () => api.get<DatabaseTable[]>('/db/tables'),
-  runQuery: (query: string) => api.post('/db/query', { query }),
+  async myStores() {
+    return this.request("/api/v1/stores/my");
+  }
 
-  // Scripts
-  runScript: (name: string) => api.post(`/scripts/run/${name}`),
+  async getStore(storeId: number) {
+    return this.request(`/api/v1/stores/${storeId}`);
+  }
 
-  // WebSocket
-  connectWebSocket: (url: string) => new WebSocket(url)
-};
+  // Products
+  async createProduct(storeId: number, name: string, price: number, stock = 0, description?: string) {
+    return this.request(`/api/v1/products/?store_id=${storeId}`, {
+      method: "POST",
+      body: JSON.stringify({ name, price, stock, description }),
+    });
+  }
 
+  async listProducts(storeId: number, skip = 0, limit = 50) {
+    return this.request(`/api/v1/products/store/${storeId}?skip=${skip}&limit=${limit}`);
+  }
+
+  // Admin
+  async adminDashboard() {
+    return this.request("/api/v1/admin/dashboard");
+  }
+
+  async adminUsers(skip = 0, limit = 100) {
+    return this.request(`/api/v1/admin/users?skip=${skip}&limit=${limit}`);
+  }
+
+  // Health
+  async healthCheck() {
+    return this.request("/health");
+  }
+}
+
+export const api = new ApiClient(API_BASE);
 export default api;
