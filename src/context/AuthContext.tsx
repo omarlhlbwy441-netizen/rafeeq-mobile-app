@@ -1,104 +1,85 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import * as LocalAuthentication from 'expo-local-authentication';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../services/api";
 
 interface User {
-  id: string;
+  id: number;
   email: string;
-  name: string;
+  username: string;
+  full_name: string | null;
   role: string;
-  token: string;
+  is_active: boolean;
+  avatar_url: string | null;
 }
 
-interface AuthContextType {
+interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
-  biometricLogin: () => Promise<boolean>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+interface AuthContextType extends AuthState {
+  login: (username: string, password: string) => Promise<void>;
+  register: (email: string, username: string, password: string, fullName?: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    isLoading: true,
+    isAuthenticated: false,
+  });
 
   useEffect(() => {
-    loadUser();
+    checkAuth();
   }, []);
 
-  async function loadUser() {
+  const checkAuth = async () => {
     try {
-      const userData = await SecureStore.getItemAsync('rafeeq_user');
-      if (userData) setUser(JSON.parse(userData));
-    } catch (e) {
-      console.error('Failed to load user', e);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function login(email: string, password: string): Promise<boolean> {
-    // Mock auth - in production calls FastAPI backend
-    if (email && password.length >= 6) {
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        role: 'admin',
-        token: 'mock_jwt_token_' + Date.now()
-      };
-      await SecureStore.setItemAsync('rafeeq_user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      return true;
-    }
-    return false;
-  }
-
-  async function register(name: string, email: string, password: string): Promise<boolean> {
-    if (name && email && password.length >= 6) {
-      return login(email, password);
-    }
-    return false;
-  }
-
-  async function logout() {
-    await SecureStore.deleteItemAsync('rafeeq_user');
-    setUser(null);
-  }
-
-  async function biometricLogin(): Promise<boolean> {
-    const compatible = await LocalAuthentication.hasHardwareAsync();
-    if (!compatible) return false;
-    const enrolled = await LocalAuthentication.isEnrolledAsync();
-    if (!enrolled) return false;
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'تحقق هويتك للدخول إلى رفيق',
-      fallbackLabel: 'استخدم كلمة المرور'
-    });
-    if (result.success) {
-      const userData = await SecureStore.getItemAsync('rafeeq_user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-        return true;
+      const token = await AsyncStorage.getItem("access_token");
+      if (token) {
+        const user = await api.getMe();
+        setState({ user, isLoading: false, isAuthenticated: true });
+      } else {
+        setState({ user: null, isLoading: false, isAuthenticated: false });
       }
+    } catch {
+      await AsyncStorage.multiRemove(["access_token", "refresh_token"]);
+      setState({ user: null, isLoading: false, isAuthenticated: false });
     }
-    return false;
-  }
+  };
+
+  const login = async (username: string, password: string) => {
+    await api.login(username, password);
+    const user = await api.getMe();
+    setState({ user, isLoading: false, isAuthenticated: true });
+  };
+
+  const register = async (email: string, username: string, password: string, fullName?: string) => {
+    await api.register(email, username, password, fullName);
+    await login(username, password);
+  };
+
+  const logout = async () => {
+    try {
+      await api.logout();
+    } finally {
+      await AsyncStorage.multiRemove(["access_token", "refresh_token"]);
+      setState({ user: null, isLoading: false, isAuthenticated: false });
+    }
+  };
+
+  const refreshUser = async () => {
+    const user = await api.getMe();
+    setState(prev => ({ ...prev, user }));
+  };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isLoading,
-      isAuthenticated: !!user,
-      login,
-      register,
-      logout,
-      biometricLogin
-    }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -106,6 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 }
