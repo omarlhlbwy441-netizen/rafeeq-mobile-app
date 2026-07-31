@@ -1,43 +1,22 @@
 # Dependencies
 node_modules/
-package-lock.json
-yarn.lock
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
-# Expo
-.expo/
-.expo-shared/
-dist/
-web-build/
-
-# Native
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# Debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# Local env files
+# Environment
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.production
+!.env.example
 
-# TypeScript
-*.tsbuildinfo
+# Build
+build/
+dist/
+*.egg-info/
 
 # IDE
 .vscode/
@@ -45,11 +24,35 @@ yarn-error.*
 *.swp
 *.swo
 
-# Backend venv
-backend/venv/
-backend/__pycache__/
-backend/*.pyc
-backend/.env
-
 # OS
+.DS_Store
 Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Expo
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore
+
+# Render
+render.yaml.bak
